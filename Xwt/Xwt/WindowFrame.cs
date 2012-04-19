@@ -59,6 +59,9 @@ namespace Xwt
 	public class WindowFrame: XwtComponent
 	{
 		EventHandler boundsChanged;
+		EventHandler shown;
+		EventHandler hidden;
+
 		Rectangle bounds;
 		bool pendingReallocation;
 		
@@ -70,8 +73,6 @@ namespace Xwt
 				Backend.Initialize (this);
 				Parent.bounds = Backend.Bounds;
 				Backend.EnableEvent (WindowFrameEvent.BoundsChanged);
-				Backend.EnableEvent (WindowFrameEvent.Shown);
-				Backend.EnableEvent (WindowFrameEvent.Hidden);
 			}
 			
 			public void OnBoundsChanged (Rectangle bounds)
@@ -79,15 +80,21 @@ namespace Xwt
 				Parent.OnBoundsChanged (new BoundsChangedEventArgs () { Bounds = bounds });
 			}
 
-			public void OnShown ()
+			public virtual void OnShown ()
 			{
 				Parent.OnShown ();
 			}
 
-			public void OnHidden ()
+			public virtual void OnHidden ()
 			{
 				Parent.OnHidden ();
 			}
+		}
+
+		static WindowFrame()
+		{
+			MapEvent(WindowFrameEvent.Shown, typeof(Window), "OnShown");
+			MapEvent(WindowFrameEvent.Hidden, typeof(Window), "OnHidden");
 		}
 
 		public WindowFrame ()
@@ -210,11 +217,10 @@ namespace Xwt
 			Visible = true;
 		}
 
-		public void OnShown ()
+		protected virtual void OnShown ()
 		{
-			var shown = Shown;
 			if(shown != null)
-				shown (this, new EventArgs ());
+				shown (this, EventArgs.Empty);
 		}
 		
 		public void Hide ()
@@ -222,11 +228,10 @@ namespace Xwt
 			Visible = false;
 		}
 
-		public void OnHidden ()
+		protected virtual void OnHidden ()
 		{
-			var hidden = Hidden;
 			if (hidden != null)
-				hidden (this, new EventArgs ());
+				hidden (this, EventArgs.Empty);
 		}
 
 		internal virtual void SetSize (double width, double height)
@@ -273,9 +278,27 @@ namespace Xwt
 			}
 		}
 
-		public EventHandler Shown;
-		public EventHandler Hidden;
+		public event EventHandler Shown {
+			add {
+				BackendHost.OnBeforeEventAdd (WindowFrameEvent.Shown, shown);
+				shown += value;
+			}
+			remove {
+				shown -= value;
+				BackendHost.OnAfterEventRemove (WindowFrameEvent.Shown, shown);
+			}
+		}
 
+		public event EventHandler Hidden {
+			add {
+				BackendHost.OnBeforeEventAdd (WindowFrameEvent.Hidden, hidden);
+				hidden += value;
+			}
+			remove {
+				hidden -= value;
+				BackendHost.OnAfterEventRemove (WindowFrameEvent.Hidden, hidden);
+			}
+		}
 	}
 	
 	public class BoundsChangedEventArgs: EventArgs
