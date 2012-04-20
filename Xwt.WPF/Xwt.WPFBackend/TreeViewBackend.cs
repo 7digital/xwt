@@ -55,8 +55,7 @@ namespace Xwt.WPFBackend
 			Tree = new ExTreeView();
 			Tree.Resources.MergedDictionaries.Add (TreeResourceDictionary);
 			Tree.ItemTemplate = new HierarchicalDataTemplate { ItemsSource = new Binding ("Children") };
-
-			//VirtualizingStackPanel.SetIsVirtualizing (Tree, false);
+			Tree.SetValue (VirtualizingStackPanel.IsVirtualizingProperty, true);
 		}
 		
 		public ScrollPolicy VerticalScrollPolicy {
@@ -251,6 +250,26 @@ namespace Xwt.WPFBackend
 
 		protected override double DefaultNaturalWidth {
 			get { return -1; }
+		}
+
+		public override WidgetSize GetPreferredHeight()
+		{
+			return new WidgetSize (0);
+		}
+
+		public override WidgetSize GetPreferredHeightForWidth(double width)
+		{
+			return GetPreferredHeight ();
+		}
+
+		public override WidgetSize GetPreferredWidth()
+		{
+			return new WidgetSize (0);
+		}
+
+		public override WidgetSize GetPreferredWidthForHeight(double height)
+		{
+			return GetPreferredWidth ();
 		}
 
 		private void OnSelectedItemsChanged (object sender, EventArgs e)
