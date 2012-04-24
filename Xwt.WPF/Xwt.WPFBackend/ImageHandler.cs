@@ -27,6 +27,7 @@
 // THE SOFTWARE.
 
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -43,19 +44,20 @@ namespace Xwt.WPFBackend
 {
 	public class ImageHandler: ImageBackendHandler
 	{
-		public override object LoadFromStream (Stream stream, string name)
+		public override object LoadFromStream (Stream stream)
 		{
-			if (name != null && name.ToLower ().EndsWith (".ico"))
-			{
+			try {
 				return new Icon (stream);
-			}
-			var img = new SWMI.BitmapImage ();
-			img.BeginInit();
-			img.CacheOption = SWMI.BitmapCacheOption.OnLoad;
-			img.StreamSource = stream;
-			img.EndInit();
 
-			return img;
+			} catch (Exception ex) {
+				Debug.WriteLine("Exception while trying to read image stream as an icon (falling back to Bitmap): " + ex);
+				var img = new SWMI.BitmapImage ();
+				img.BeginInit();
+				img.CacheOption = SWMI.BitmapCacheOption.OnLoad;
+				img.StreamSource = stream;
+				img.EndInit();
+				return img;
+			}
 		}
 
 		public override object LoadFromIcon (string id, IconSize size)
