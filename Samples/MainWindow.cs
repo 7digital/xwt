@@ -17,10 +17,12 @@ namespace Samples
 		DataField<Sample> widgetCol = new DataField<Sample> ();
 		DataField<Image> iconCol = new DataField<Image> ();
 		
+		StatusIcon statusIcon;
+		
 		public MainWindow ()
 		{
 			try {
-				var statusIcon = Application.CreateStatusIcon ();
+				statusIcon = Application.CreateStatusIcon ();
 				statusIcon.Menu = new Menu ();
 				statusIcon.Menu.Items.Add (new MenuItem ("Test"));
 				statusIcon.Image = Image.FromResource (GetType (), "copyleft-16x16.ico");
@@ -63,6 +65,7 @@ namespace Samples
 			AddSample (null, "Buttons", typeof(ButtonSample));
 			AddSample (null, "CheckBox", typeof(Checkboxes));
 			AddSample (null, "Clipboard", typeof(ClipboardSample));
+			AddSample (null, "ColorSelector", typeof(ColorSelectorSample));
 			AddSample (null, "ComboBox", typeof(ComboBoxes));
 //			AddSample (null, "Designer", typeof(Designer));
 			AddSample (null, "Drag & Drop", typeof(DragDrop));
@@ -77,6 +80,7 @@ namespace Samples
 			AddSample (n, "Text", typeof(DrawingText));
 			AddSample (n, "Partial Images", typeof (PartialImages));
 			
+			AddSample (null, "Progress bars", typeof(ProgressBarSample));
 			AddSample (null, "Frames", typeof(Frames));
 			AddSample (null, "Images", typeof(Images));
 			AddSample (null, "Labels", typeof(Labels));
@@ -108,6 +112,15 @@ namespace Samples
 			Content = box;
 			
 			samplesTree.SelectionChanged += HandleSamplesTreeSelectionChanged;
+		}
+		
+		protected override void Dispose (bool disposing)
+		{
+			base.Dispose (disposing);
+			
+			if (statusIcon != null) {
+				statusIcon.Dispose ();
+			}
 		}
 
 		void HandleSamplesTreeSelectionChanged (object sender, EventArgs e)

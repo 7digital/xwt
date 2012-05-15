@@ -1,10 +1,10 @@
 // 
-// IWindowFrameBackend.cs
+// ColorSelectorSample.cs
 //  
 // Author:
 //       Lluis Sanchez <lluis@xamarin.com>
 // 
-// Copyright (c) 2011 Xamarin Inc
+// Copyright (c) 2012 Xamarin Inc
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,41 +24,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+using Xwt;
 
-namespace Xwt.Backends
+
+namespace Samples
 {
-	public interface IWindowFrameBackend: IBackend
+	public class ColorSelectorSample: VBox
 	{
-		void Initialize (IWindowFrameEventSink eventSink);
-		void Dispose ();
-		
-		Rectangle Bounds { get; set; }
-		bool Visible { get; set; }
-		string Title { get; set; }
-		
-		bool Decorated { get; set; }
-		bool ShowInTaskbar { get; set; }
-		
-		/// <summary>
-		/// Presents a window to the user. This may mean raising the window in the stacking order,
-		/// deiconifying it, moving it to the current desktop, and/or giving it the keyboard focus
-		/// </summary>
-		void Present ();
-	}
-	
-	public interface IWindowFrameEventSink
-	{
-		void OnBoundsChanged (Rectangle bounds);
-		void OnShown ();
-		void OnHidden ();
-	}
-
-	[Flags]
-	public enum WindowFrameEvent
-	{
-		BoundsChanged = 1,
-		Shown = 2,
-		Hidden = 4
+		public ColorSelectorSample ()
+		{
+			ColorSelector sel = new ColorSelector ();
+			sel.Color = Xwt.Drawing.Colors.AliceBlue;
+			PackStart (sel);
+		}
 	}
 }
 

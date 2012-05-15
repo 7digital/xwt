@@ -1,21 +1,21 @@
-// 
-// IWindowFrameBackend.cs
-//  
+﻿//
+// ExListViewItem.cs
+//
 // Author:
-//       Lluis Sanchez <lluis@xamarin.com>
-// 
-// Copyright (c) 2011 Xamarin Inc
-// 
+//       Eric Maupin <ermau@xamarin.com>
+//
+// Copyright (c) 2012 Xamarin, Inc.
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,42 +23,51 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 using System;
+using System.Windows;
+using System.Windows.Controls;
 
-namespace Xwt.Backends
+namespace Xwt.WPFBackend
 {
-	public interface IWindowFrameBackend: IBackend
+	public class ExListViewItem
+		: ListViewItem
 	{
-		void Initialize (IWindowFrameEventSink eventSink);
-		void Dispose ();
-		
-		Rectangle Bounds { get; set; }
-		bool Visible { get; set; }
-		string Title { get; set; }
-		
-		bool Decorated { get; set; }
-		bool ShowInTaskbar { get; set; }
-		
-		/// <summary>
-		/// Presents a window to the user. This may mean raising the window in the stacking order,
-		/// deiconifying it, moving it to the current desktop, and/or giving it the keyboard focus
-		/// </summary>
-		void Present ();
-	}
-	
-	public interface IWindowFrameEventSink
-	{
-		void OnBoundsChanged (Rectangle bounds);
-		void OnShown ();
-		void OnHidden ();
-	}
+		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+		{
+			if (e.Property.Name == "IsVisible" && IsVisible) {
+				foreach (var column in ((GridView)ListView.View).Columns) {
+					if (!Double.IsNaN (column.Width))
+						continue;
+					
+					column.Width = column.ActualWidth;
+					column.Width = Double.NaN;
+				}
+			}
 
-	[Flags]
-	public enum WindowFrameEvent
-	{
-		BoundsChanged = 1,
-		Shown = 2,
-		Hidden = 4
+			base.OnPropertyChanged(e);
+		}
+
+		private ExListView view;
+		protected ExListView ListView {
+			get {
+				if (this.view == null)
+					this.view = FindListView ((FrameworkElement) VisualParent);
+
+				return this.view;
+			}
+		}
+
+		private ExListView FindListView (FrameworkElement element)
+		{
+			if (element == null)
+				return null;
+
+			ExListView view = element as ExListView;
+			if (view != null)
+				return view;
+
+			return FindListView (element.TemplatedParent as FrameworkElement);
+		}
 	}
 }
-

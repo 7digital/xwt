@@ -1,10 +1,10 @@
 // 
-// IWindowFrameBackend.cs
+// ProgressBar.cs
 //  
 // Author:
-//       Lluis Sanchez <lluis@xamarin.com>
+//       Andres G. Aragoneses <knocte@gmail.com>
 // 
-// Copyright (c) 2011 Xamarin Inc
+// Copyright (c) 2012 Anrdres G. Aragoneses
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,42 +23,53 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 using System;
+using Xwt.Backends;
+using Xwt.Drawing;
 
-namespace Xwt.Backends
+namespace Xwt
 {
-	public interface IWindowFrameBackend: IBackend
+	public class ProgressBar : Widget
 	{
-		void Initialize (IWindowFrameEventSink eventSink);
-		void Dispose ();
+		double fraction = 0.0;
+		bool indeterminate = false;
 		
-		Rectangle Bounds { get; set; }
-		bool Visible { get; set; }
-		string Title { get; set; }
+		public ProgressBar ()
+		{
+		}
 		
-		bool Decorated { get; set; }
-		bool ShowInTaskbar { get; set; }
+		protected override BackendHost CreateBackendHost ()
+		{
+			return new WidgetBackendHost ();
+		}
 		
-		/// <summary>
-		/// Presents a window to the user. This may mean raising the window in the stacking order,
-		/// deiconifying it, moving it to the current desktop, and/or giving it the keyboard focus
-		/// </summary>
-		void Present ();
-	}
-	
-	public interface IWindowFrameEventSink
-	{
-		void OnBoundsChanged (Rectangle bounds);
-		void OnShown ();
-		void OnHidden ();
-	}
+		IProgressBarBackend Backend {
+			get { return (IProgressBarBackend) BackendHost.Backend; }
+		}
+		
+		public double Fraction {
+			get { return fraction; }
+			set {
+				// TODO: allow any value, by implementing MinValue and MaxValue properties
+				// and then adjusting the fraction to a [0.0..1.0] range only in the Gtk backend
+				if (value < 0.0 || value > 1.0)
+					throw new NotSupportedException ("Fraction value can only be in the [0.0..1.0] range");
 
-	[Flags]
-	public enum WindowFrameEvent
-	{
-		BoundsChanged = 1,
-		Shown = 2,
-		Hidden = 4
+				fraction = value;
+				Backend.SetFraction (fraction);
+			}
+		}
+
+		public bool Indeterminate {
+			get { return indeterminate; }
+			set {
+				if (indeterminate != value) {
+					indeterminate = value;
+					Backend.SetIndeterminate (value);
+				}
+			}
+		}
 	}
 }
 

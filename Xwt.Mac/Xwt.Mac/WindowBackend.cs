@@ -77,6 +77,11 @@ namespace Xwt.Mac
 		{
 			MakeKeyAndOrderFront (MacEngine.App);
 		}
+		
+		public void Present ()
+		{
+			MakeKeyAndOrderFront (MacEngine.App);
+		}
 
 		public bool Visible {
 			get {
@@ -134,18 +139,23 @@ namespace Xwt.Mac
 			OnHidden ();
 		}
 		
-		HashSet<WindowFrameEvent> eventsEnabled = new HashSet<WindowFrameEvent> ();
+		bool VisibilityEventsEnabled ()
+		{
+			return eventsEnabled != WindowFrameEvent.BoundsChanged;
+		}
+		WindowFrameEvent eventsEnabled = WindowFrameEvent.BoundsChanged;
+
 		NSString HiddenProperty {
 			get { return new NSString ("hidden"); }
 		}
 		
 		void EnableVisibilityEvent (WindowFrameEvent ev)
 		{
-			if (eventsEnabled.Count == 0) {
+			if (!VisibilityEventsEnabled ()) {
 				ContentView.AddObserver (this, HiddenProperty, NSKeyValueObservingOptions.New, IntPtr.Zero);
 			}
-			if (!eventsEnabled.Contains (ev)) {
-				eventsEnabled.Add (ev);
+			if (!eventsEnabled.HasFlag (ev)) {
+				eventsEnabled |= ev;
 			}
 		}
 
@@ -153,11 +163,11 @@ namespace Xwt.Mac
 		{
 			if (keyPath.ToString () == HiddenProperty.ToString () && ofObject.Equals (ContentView)) {
 				if (ContentView.Hidden) {
-					if (eventsEnabled.Contains (WindowFrameEvent.Hidden)) {
+					if (eventsEnabled.HasFlag (WindowFrameEvent.Hidden)) {
 						OnHidden ();
 					}
 				} else {
-					if (eventsEnabled.Contains (WindowFrameEvent.Shown)) {
+					if (eventsEnabled.HasFlag (WindowFrameEvent.Shown)) {
 						OnShown ();
 					}
 				}
@@ -178,10 +188,13 @@ namespace Xwt.Mac
 			});
 		}
 
-		void DisableVisibilityEvent (WindowFrameEvent ev){
-			eventsEnabled.Remove (ev);
-			if (eventsEnabled.Count == 0) {
-				ContentView.RemoveObserver (this, HiddenProperty);
+		void DisableVisibilityEvent (WindowFrameEvent ev)
+		{
+			if (eventsEnabled.HasFlag (ev)) {
+				eventsEnabled ^= ev;
+				if (!VisibilityEventsEnabled ()) {
+					ContentView.RemoveObserver (this, HiddenProperty);
+				}
 			}
 		}
 

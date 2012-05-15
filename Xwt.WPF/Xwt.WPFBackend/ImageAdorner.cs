@@ -1,5 +1,5 @@
 ﻿//
-// ExListView.cs
+// ImageAdorner.cs
 //
 // Author:
 //       Eric Maupin <ermau@xamarin.com>
@@ -26,35 +26,72 @@
 
 using System.Windows;
 using System.Windows.Controls;
-using SWC = System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Media;
 
 namespace Xwt.WPFBackend
 {
-	public class ExListView
-		: SWC.ListView, IWpfWidget
+	public class ImageAdorner
+		: Adorner
 	{
-		public WidgetBackend Backend { get; set; }
-
-		protected override bool IsItemItsOwnContainerOverride(object item)
+		public ImageAdorner (UIElement owner, object image)
+			: base (owner)
 		{
-			return item is ExListViewItem;
+			var source = DataConverter.AsImageSource (image);
+			this.child = new Image {
+			    Source = source,
+				Width = source.Width,
+				Height = source.Height
+			};
 		}
 
-		protected override DependencyObject GetContainerForItemOverride()
+		public Point Offset
 		{
-			return new ExListViewItem();
+			set
+			{
+				this.offset = value;
+				UpdatePosition ();
+			}
 		}
+
+		public override GeneralTransform GetDesiredTransform (GeneralTransform transform)
+		{
+			GeneralTransformGroup result = new GeneralTransformGroup();
+			result.Children.Add (transform);
+			result.Children.Add (new TranslateTransform (this.offset.X, this.offset.Y));
+			return result;
+		}
+
+		private Point offset;
+		private readonly UIElement child;
 
 		protected override System.Windows.Size MeasureOverride (System.Windows.Size constraint)
 		{
-			var s = base.MeasureOverride (constraint);
+		    this.child.Measure (constraint);
+		    return this.child.DesiredSize;
+		}
 
-			if (ScrollViewer.GetHorizontalScrollBarVisibility (this) != ScrollBarVisibility.Hidden)
-				s.Width = 0;
-			if (ScrollViewer.GetVerticalScrollBarVisibility (this) != ScrollBarVisibility.Hidden)
-				s.Height = SystemParameters.CaptionHeight;
-			s = Backend.MeasureOverride (constraint, s);
-			return s;
+		protected override System.Windows.Size ArrangeOverride (System.Windows.Size finalSize)
+		{
+		    this.child.Arrange (new Rect (this.child.DesiredSize));
+		    return finalSize;
+		}
+
+		protected override Visual GetVisualChild (int index)
+		{
+			return this.child;
+		}
+
+		protected override int VisualChildrenCount
+		{
+			get { return 1; }
+		}
+
+		protected void UpdatePosition()
+		{
+			AdornerLayer layer = (AdornerLayer) Parent;
+			if (layer != null)
+				layer.Update (AdornedElement);
 		}
 	}
 }

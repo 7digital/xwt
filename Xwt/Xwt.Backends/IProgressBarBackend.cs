@@ -1,10 +1,10 @@
 // 
-// IWindowFrameBackend.cs
+// IProgressBarBackend.cs
 //  
 // Author:
-//       Lluis Sanchez <lluis@xamarin.com>
+//       Andres G. Aragoneses <knocte@gmail.com>
 // 
-// Copyright (c) 2011 Xamarin Inc
+// Copyright (c) 2012 Andres G. Aragoneses
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,42 +23,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 using System;
 
 namespace Xwt.Backends
 {
-	public interface IWindowFrameBackend: IBackend
+	public interface IProgressBarBackend: IWidgetBackend
 	{
-		void Initialize (IWindowFrameEventSink eventSink);
-		void Dispose ();
-		
-		Rectangle Bounds { get; set; }
-		bool Visible { get; set; }
-		string Title { get; set; }
-		
-		bool Decorated { get; set; }
-		bool ShowInTaskbar { get; set; }
-		
-		/// <summary>
-		/// Presents a window to the user. This may mean raising the window in the stacking order,
-		/// deiconifying it, moving it to the current desktop, and/or giving it the keyboard focus
-		/// </summary>
-		void Present ();
-	}
-	
-	public interface IWindowFrameEventSink
-	{
-		void OnBoundsChanged (Rectangle bounds);
-		void OnShown ();
-		void OnHidden ();
-	}
-
-	[Flags]
-	public enum WindowFrameEvent
-	{
-		BoundsChanged = 1,
-		Shown = 2,
-		Hidden = 4
+		void SetFraction (double fraction);
+		void SetIndeterminate (bool indeterminate);
 	}
 }
 

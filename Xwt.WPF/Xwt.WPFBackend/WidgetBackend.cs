@@ -31,6 +31,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using SWM = System.Windows.Media;
@@ -215,7 +216,7 @@ namespace Xwt.WPFBackend
 
 		public virtual bool Visible {
 			get { return Widget.Visibility == Visibility.Visible; }
-			set { Widget.Visibility = value ? Visibility.Visible : Visibility.Hidden; }
+			set { Widget.Visibility = value ? Visibility.Visible : Visibility.Collapsed; }
 		}
 
 		public string TooltipText {
@@ -572,19 +573,25 @@ namespace Xwt.WPFBackend
 		void WidgetKeyDownHandler (object sender, System.Windows.Input.KeyEventArgs e)
 		{
 			KeyEventArgs args;
-			if (MapToXwtKeyArgs (e, out args))
+			if (MapToXwtKeyArgs (e, out args)) {
 				Toolkit.Invoke (delegate {
 					eventSink.OnKeyPressed (args);
 				});
+				if (args.Handled)
+					e.Handled = true;
+			}
 		}
 
 		void WidgetKeyUpHandler (object sender, System.Windows.Input.KeyEventArgs e)
 		{
 			KeyEventArgs args;
-			if (MapToXwtKeyArgs (e, out args))
+			if (MapToXwtKeyArgs (e, out args)) {
 				Toolkit.Invoke (delegate {
 					eventSink.OnKeyReleased (args);
 				});
+				if (args.Handled)
+					e.Handled = true;
+			}
 		}
 
 		bool MapToXwtKeyArgs (System.Windows.Input.KeyEventArgs e, out KeyEventArgs result)
@@ -601,16 +608,22 @@ namespace Xwt.WPFBackend
 
 		void WidgetMouseDownHandler (object o, MouseButtonEventArgs e)
 		{
+			var args = ToXwtButtonArgs (e);
 			Toolkit.Invoke (delegate () {
-				eventSink.OnButtonPressed (ToXwtButtonArgs (e));
+				eventSink.OnButtonPressed (args);
 			});
+			if (args.Handled)
+				e.Handled = true;
 		}
 
 		void WidgetMouseUpHandler (object o, MouseButtonEventArgs e)
 		{
+			var args = ToXwtButtonArgs (e);
 			Toolkit.Invoke (delegate () {
-				eventSink.OnButtonReleased (ToXwtButtonArgs (e));
+				eventSink.OnButtonReleased (args);
 			});
+			if (args.Handled)
+				e.Handled = true;
 		}
 
 		ButtonEventArgs ToXwtButtonArgs (MouseButtonEventArgs e)
@@ -626,16 +639,12 @@ namespace Xwt.WPFBackend
 
 		void WidgetGotFocusHandler (object o, RoutedEventArgs e)
 		{
-			Toolkit.Invoke (delegate {
-				eventSink.OnGotFocus ();
-			});
+			Toolkit.Invoke (this.eventSink.OnGotFocus);
 		}
 
 		void WidgetLostFocusHandler (object o, RoutedEventArgs e)
 		{
-			Toolkit.Invoke (delegate {
-				eventSink.OnLostFocus ();
-			});
+			Toolkit.Invoke (eventSink.OnLostFocus);
 		}
 
 		DragDropData DragDropInfo {
@@ -647,12 +656,21 @@ namespace Xwt.WPFBackend
 			}
 		}
 
+		private bool adorned;
+		private ImageAdorner adorner;
+
 		public void DragStart (DragStartData data)
 		{
 			if (data.Data == null)
 				throw new ArgumentNullException ("data");
-
+			
 			DataObject dataObj = data.Data.ToDataObject();
+
+			if (data.ImageBackend != null) {
+				this.adorned = true;
+				this.adorner = new ImageAdorner (Widget, data.ImageBackend);
+				AdornerLayer.GetAdornerLayer (Widget).Add (this.adorner);
+			}
 
 			Widget.Dispatcher.BeginInvoke (
 				(Func<DependencyObject, object, DragDropEffects, DragDropEffects>)DragDrop.DoDragDrop,
@@ -729,8 +747,13 @@ namespace Xwt.WPFBackend
 		{
 			foreach (var type in types) {
 				string format = type.ToWpfDataFormat ();
-				if (!data.GetDataPresent (format))
-					continue;
+				if (!data.GetDataPresent (format)) {
+					// This is a workaround to support type names which don't include the assembly name.
+					// It eases integration with Windows DND.
+					format = NormalizeTypeName (format);
+					if (!data.GetDataPresent (format))
+						continue;
+				}
 
 				var value = data.GetData (format);
 				if (type == TransferDataType.Text)
@@ -745,6 +768,22 @@ namespace Xwt.WPFBackend
 			}
 		}
 
+		static string NormalizeTypeName (string dataType)
+		{
+			// If the string is a fully qualified type name, strip the assembly name
+			int i = dataType.IndexOf (',');
+			if (i == -1)
+				return dataType;
+			string asmName = dataType.Substring (i + 1).Trim ();
+			try {
+				new System.Reflection.AssemblyName (asmName);
+			}
+			catch {
+				return dataType;
+			}
+			return dataType.Substring (0, i).Trim ();
+		}
+
 		void WidgetDragOverHandler (object sender, System.Windows.DragEventArgs e)
 		{
 			var types = e.Data.GetFormats ().Select (t => t.ToXwtTransferType ()).ToArray ();
@@ -752,6 +791,15 @@ namespace Xwt.WPFBackend
 			var proposedAction = DetectDragAction (e.KeyStates);
 
 			e.Handled = true; // Prevent default handlers from being used.
+
+			if (this.adorner != null) {
+				if (!this.adorned) {
+					AdornerLayer.GetAdornerLayer (Widget).Add (this.adorner);
+					this.adorned = true;
+				}
+
+				this.adorner.Offset = new Point (pos.X, pos.Y);
+			}
 
 			if ((enabledEvents & WidgetEvent.DragOverCheck) > 0) {
 				var checkArgs = new DragOverCheckEventArgs (pos, types, proposedAction);
@@ -799,6 +847,12 @@ namespace Xwt.WPFBackend
 
 			e.Handled = true; // Prevent default handlers from being used.
 
+			if (this.adorner != null) {
+				AdornerLayer.GetAdornerLayer (Widget).Remove (this.adorner);
+				this.adorner = null;
+				this.adorned = false;
+			}
+
 			if ((enabledEvents & WidgetEvent.DragDropCheck) > 0) {
 				var checkArgs = new DragCheckEventArgs (pos, types, actualEffect.ToXwtDropAction ());
 				bool res = Toolkit.Invoke (delegate {
@@ -835,6 +889,11 @@ namespace Xwt.WPFBackend
 
 		void WidgetDragLeaveHandler (object sender, System.Windows.DragEventArgs e)
 		{
+			if (this.adorner != null) {
+				AdornerLayer.GetAdornerLayer (Widget).Remove (this.adorner);
+				this.adorned = false;
+			}
+
 			Toolkit.Invoke (delegate {
 				eventSink.OnDragLeave (EventArgs.Empty);
 			});

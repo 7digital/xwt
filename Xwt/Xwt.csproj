@@ -292,6 +292,11 @@
     <Compile Include="Xwt.Backends\DefaultNaturalSizes.cs" />
     <Compile Include="Xwt\StatusIcon.cs" />
     <Compile Include="Xwt.Backends\IStatusIconBackend.cs" />
+    <Compile Include="Xwt\ColorSelector.cs" />
+    <Compile Include="Xwt.Backends\IColorSelectorBackend.cs" />
+    <Compile Include="Xwt.Backends\XwtWidgetBackend.cs" />
+    <Compile Include="Xwt\ProgressBar.cs" />
+    <Compile Include="Xwt.Backends\IProgressBarBackend.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />

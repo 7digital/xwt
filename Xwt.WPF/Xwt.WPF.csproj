@@ -63,6 +63,7 @@
     <Compile Include="Xwt.WPFBackend\ComboBoxBackend.cs" />
     <Compile Include="Xwt.WPFBackend\ComboBoxEntryBackend.cs" />
     <Compile Include="Xwt.WPFBackend\ComboBoxTextEntryBackend.cs" />
+    <Compile Include="Xwt.WPFBackend\ProgressBarBackend.cs" />
     <Compile Include="Xwt.WPFBackend\CustomWidgetBackend.cs" />
     <Compile Include="Xwt.WPFBackend\DelegatedCommand.cs" />
     <Compile Include="Xwt.WPFBackend\DialogBackend.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="Xwt.WPFBackend\ExGrid.cs" />
     <Compile Include="Xwt.WPFBackend\ExListBox.cs" />
     <Compile Include="Xwt.WPFBackend\ExListView.cs" />
+    <Compile Include="Xwt.WPFBackend\ExListViewItem.cs" />
     <Compile Include="Xwt.WPFBackend\ExScrollViewer.cs" />
     <Compile Include="Xwt.WPFBackend\ExTextBox.cs" />
     <Compile Include="Xwt.WPFBackend\ExTreeView.cs" />
@@ -116,6 +118,7 @@
     <Compile Include="Xwt.WPFBackend\TreeStoreBackend.cs" />
     <Compile Include="Xwt.WPFBackend\TreeStoreNode.cs" />
     <Compile Include="Xwt.WPFBackend\TreeViewBackend.cs" />
+    <Compile Include="Xwt.WPFBackend\ImageAdorner.cs" />
     <Compile Include="Xwt.WPFBackend\Util.cs" />
     <Compile Include="Xwt.WPFBackend\ValuesContainer.cs" />
     <Compile Include="Xwt.WPFBackend\WidgetBackend.cs" />
@@ -147,5 +150,10 @@
     <Resource Include="Xwt.WPFBackend\Buttons.xaml">
       <SubType>Designer</SubType>
     </Resource>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="icons\list-add.png" />
+    <EmbeddedResource Include="icons\list-remove.png" />
   </ItemGroup>
 </Project>
